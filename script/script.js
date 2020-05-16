@@ -85,12 +85,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener('click', (event) => {
-        // console.log('event: ', event.target.closest('.openModalButton'));
+
+        let target = event.target;
+        // console.log('target: ', target);
 
         if(
-        !event.target.closest('.modal-dialog') &&
-        !event.target.closest('.openModalButton') && 
-        !event.target.closest('.burger')) {
+            !target.closest('.modal-dialog') &&
+            !target.closest('.openModalButton') && 
+            !target.closest('.burger')
+        ){
             modalBlock.classList.remove('d-block');
             burgerBtn.classList.remove('active');
         }
