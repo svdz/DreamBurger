@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const prevButton = document.querySelector('#prev');
     const nextButton = document.querySelector('#next');
+    const sendButton = document.querySelector('#send');
     const modalDialog = document.querySelector('.modal-dialog');
+    const modalHeader = document.querySelector('.modal-header');
 
     const questions = [
         {
@@ -193,6 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const playTest = () => {
+        
+        const finalAnswers = [];
         let numberQuestion = 0;
 
         const renderAnswers = (index) => {
@@ -201,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // answerItem.classList.add('answers-item', 'd-flex', 'flex-column');
                 answerItem.classList.add('answers-item', 'd-flex', 'justify-content-center');
                 answerItem.innerHTML = `
-                    <input type="${questions[index].type}" id="${answer.title}" name="answer" class="d-none">
+                    <input type="${questions[index].type}" id="${answer.title}" name="answer" class="d-none" value="${answer.title}">
                     <label for="${answer.title}" class="d-flex flex-column justify-content-between">
                     <img class="answerImg" src=${answer.url} alt="burger">
                     <span>${answer.title}</span>
@@ -228,18 +232,90 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderQuestions = (indexQuestion) => {
             formAnswers.innerHTML = '';
 
-            if(numberQuestion == 0) {
-                prevButton.style.display = 'none';
-                nextButton.style.display = 'inline-block';
-            } else if(numberQuestion == questions.length - 1) {
-                prevButton.style.display = 'inline-block';
-                nextButton.style.display = 'none';
+            const questCount = questions.length;
+
+            if (numberQuestion >= 0 && numberQuestion < questions.length) {
+                questionTitle.textContent = `${questions[indexQuestion].question}`;
+                renderAnswers(indexQuestion);
+                modalHeader.classList.remove('d-none');
+                prevButton.classList.remove('d-none');
+                nextButton.classList.remove('d-none');
+                sendButton.classList.add('d-none');  
+                nextButton.disabled = true;
+                sendButton.disabled = true;               
             } else {
-                prevButton.style.display = 'inline-block';
-                nextButton.style.display = 'inline-block';
+                questionTitle.textContent = '';
             }
 
-            questionTitle.textContent = `${questions[indexQuestion].question}`;
+            switch (numberQuestion) {
+                case 0:
+                    prevButton.classList.add('d-none');
+                    break;
+                case questCount:
+                    prevButton.classList.add('d-none');
+                    nextButton.classList.add('d-none');
+                    sendButton.classList.remove('d-none');
+                    formAnswers.innerHTML = `
+                        <div class="form-group">
+                            <label for="numberPhone">Enter your phone:</label>
+                            <input type="phone" class="form-control" id="numberPhone">
+                        </div>
+                    `;
+
+                    const numInput = document.getElementById('numberPhone');
+
+                    numInput.onchange = 
+                    numInput.oninput =
+                    numInput.oncut = numInput.oncopy = numInput.onpaste
+                    = () => {
+                        sendButton.disabled = !numInput.value
+                        // console.log(numInput.value);
+                    };
+
+                    console.dir(numInput);
+
+                    break;
+                case questCount + 1:
+                    modalHeader.classList.add('d-none');
+                    sendButton.classList.add('d-none');
+                    formAnswers.textContent = 'Спасибо! Информация будет передана менеджеру.';
+                    setTimeout(() => {
+                        modalBlock.classList.remove('d-block');
+                        burgerBtn.classList.remove('active');
+                    }, 2000);
+                    break;
+
+                // default:
+                //     console.log('Not in cases');
+                //     break;
+            }
+
+
+
+            // if(numberQuestion === 0) {
+            //     prevButton.classList.add('d-none');                 
+            // }
+            // // if (numberQuestion === questions.length - 1) {
+            // //     // nextButton.classList.add('d-none');
+            // // }
+            // if (numberQuestion === questions.length) {
+            //     prevButton.classList.add('d-none');
+            //     nextButton.classList.add('d-none');
+            //     sendButton.classList.remove('d-none');
+            //     formAnswers.innerHTML = `
+            //         <div class="form-group">
+            //             <label for="numberPhone">Enter your phone:</label>
+            //             <input type="phone" class="form-control" id="numberPhone">
+            //         </div>
+            //     `;
+            // }
+            // if (numberQuestion === questions.length + 1) {
+            //     formAnswers.textContent = 'Спасибо! Информация будет передана менеджеру.';
+            //     setTimeout(() => {
+            //         modalBlock.classList.remove('d-block');
+            //         burgerBtn.classList.remove('active');
+            //     }, 2000);
+            // }
 
             // const burger1 = 'Стандарт'
             // const burger1Image = './image/burger.png';
@@ -265,10 +341,32 @@ document.addEventListener('DOMContentLoaded', () => {
             // </div>
 
             // console.log('render');
-            renderAnswers(indexQuestion);
         };
 
         renderQuestions(numberQuestion);
+
+        const checkAnswer = () => {
+            const obj = {};
+            
+            [...formAnswers.elements]
+                .filter(input => input.checked || input.id === 'numberPhone')
+                .forEach((input, index) => {
+                    if (numberQuestion >= 0 && numberQuestion < questions.length) {
+                        obj[`${index}_${questions[numberQuestion].question}`] = input.value;
+                    }
+                    if (numberQuestion === questions.length) {
+                        obj[`Phone number`] = input.value;
+                    }
+                });
+            finalAnswers.push(obj);
+        };
+
+        const validateAnswer = () => {
+            const hasSelected = [...formAnswers.elements]
+                .filter(input => input.checked)
+                .length > 0;
+            nextButton.disabled = !hasSelected;
+        };
 
         prevButton.onclick = () => {
             numberQuestion--;
@@ -276,9 +374,24 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         nextButton.onclick = () => {
+            checkAnswer();
             numberQuestion++;
             renderQuestions(numberQuestion);
         };
+
+        sendButton.onclick = () => {
+            checkAnswer();
+            console.log(finalAnswers);
+            numberQuestion++;
+            renderQuestions(numberQuestion);
+        };
+
+        document
+            .getElementById('formAnswers')
+            .onclick = (event) => {
+                validateAnswer();
+            };
+
 
         // document.querySelectorAll('.answers-item').forEach(item => {
         //     item.addEventListener('click', () => {
@@ -286,11 +399,11 @@ document.addEventListener('DOMContentLoaded', () => {
         //     });
         // });
 
-        document
-            .getElementById('formAnswers')
-            .addEventListener('click', (event) => {
-                console.log(event.target);
-            });
+        // document
+        //     .getElementById('formAnswers')
+        //     .addEventListener('click', (event) => {
+        //         console.log(event.target);
+        //     });
     };
 
 
