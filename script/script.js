@@ -197,6 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const playTest = () => {
         
         const finalAnswers = [];
+        const obj = {};
+
         let numberQuestion = 0;
 
         const renderAnswers = (index) => {
@@ -272,13 +274,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         // console.log(numInput.value);
                     };
 
-                    console.dir(numInput);
+                    numInput.addEventListener('input', event => {
+                        // console.log(event.target.value);
+                        // event.target.value = event.target.value.replace(/\D/, ''); //only digits
+                        event.target.value = event.target.value.replace(/[^0-9+-]/, ''); //only digits
+                    });
+
 
                     break;
                 case questCount + 1:
                     modalHeader.classList.add('d-none');
                     sendButton.classList.add('d-none');
                     formAnswers.textContent = 'Спасибо! Информация будет передана менеджеру.';
+
+                    for (let key in obj) {
+                        let newObj = {};
+                        newObj[key] = obj[key];
+                        finalAnswers.push(newObj);
+                    }
+                    console.log('finalAnswers: ', finalAnswers);
+
                     setTimeout(() => {
                         modalBlock.classList.remove('d-block');
                         burgerBtn.classList.remove('active');
@@ -346,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQuestions(numberQuestion);
 
         const checkAnswer = () => {
-            const obj = {};
             
             [...formAnswers.elements]
                 .filter(input => input.checked || input.id === 'numberPhone')
@@ -358,7 +372,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         obj[`Phone number`] = input.value;
                     }
                 });
-            finalAnswers.push(obj);
+
+            // finalAnswers.push(obj);
         };
 
         const validateAnswer = () => {
@@ -381,9 +396,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         sendButton.onclick = () => {
             checkAnswer();
-            console.log(finalAnswers);
             numberQuestion++;
             renderQuestions(numberQuestion);
+
+            //PHP-mailer
         };
 
         document
